@@ -1,1 +1,16 @@
-a
+name: Bandit
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
+  # schedule:
+  #   - cron: '29 13 * * 2'
+uses: mdegis/bandit-action@v1.0
+with:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  path: "."
+  level: high
+  confidence: high
+  exit_zero: true
