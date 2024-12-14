@@ -67,5 +67,5 @@ jobs:
 
       # Block or Merge Pull Request
       - name: Block or Merge Pull Request
-        if: env.action == 'block'
+        if: env.action == 'successful'
         run: exit 1
