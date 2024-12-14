@@ -9,6 +9,8 @@ def create_database():
     c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)''')
     c.execute("INSERT INTO users (username, password) VALUES ('admin', 'adminpass')")
     conn.commit()
+
+    
     conn.close()
 
 @app.route('/login', methods=['GET', 'POST'])
