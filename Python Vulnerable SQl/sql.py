@@ -11,7 +11,6 @@ def create_database():
     conn.commit()
     conn.close()
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     username = request.args.get('username')
