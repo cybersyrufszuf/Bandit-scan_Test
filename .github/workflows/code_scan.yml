@@ -6,8 +6,8 @@ on:
       - main
 
 permissions:
-  issues: write
-  pull-requests: write
+  contents: read
+  pull-requests: write  # Needed to add comments to the PR
 
 jobs:
   code-scan:
@@ -18,42 +18,43 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Python environment and install Bandit
+      # Step 2: Set up Python environment
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
 
+      # Step 3: Install Bandit
       - name: Install Bandit
-        run: pip install bandit
+        run: pip install bandit jq
 
-      # Step 3: Run Bandit to scan the repository
+      # Step 4: Run Bandit to scan the repository
       - name: Run Bandit
         id: bandit_scan
         run: |
           bandit -r . -f json -o bandit_output.json || echo "Bandit scan completed"
 
-      # Step 4: Analyze Bandit Results
+      # Step 5: Analyze Bandit Results
       - name: Analyze Bandit Results
         id: analyze_results
         run: |
-          critical_issues=$(jq '.results[] | select(.issue_severity=="CRITICAL")' bandit_output.json)
+          critical_issues=$(jq '.results[] | select(.issue_severity=="HIGH")' bandit_output.json)
           if [ -n "$critical_issues" ]; then
             echo "action=block" >> $GITHUB_ENV
           else
             echo "action=merge" >> $GITHUB_ENV
           fi
 
-      # Step 5: Comment on Pull Request
+      # Step 6: Comment on Pull Request
       - name: Comment on Pull Request
         uses: actions/github-script@v6
         with:
           script: |
             const action = process.env.action;
-            const message = action === "block" 
-              ? "Pull request blocked due to critical vulnerabilities." 
-              : "Pull request passed the scan successfully.";
-      
+            const message = action === "block"
+              ? "Pull request blocked: Critical vulnerabilities found."
+              : "Pull request passed: No critical vulnerabilities.";
+            
             if (context.payload.pull_request) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -61,18 +62,9 @@ jobs:
                 issue_number: context.payload.pull_request.number,
                 body: message,
               });
-            } else {
-              console.log("No pull request context available.");
             }
 
-      # Step 6: Block or Merge Pull Request
+      # Step 7: Block or Merge Pull Request
       - name: Block or Merge Pull Request
         if: env.action == 'block'
-        run: |
-          echo "Blocking the pull request due to critical vulnerabilities."
-          exit 1
-
-      - name: Merge Pull Request
-        if: env.action == 'merge'
-        run: |
-          echo "Pull request passed the scan and can be merged."
+        run: exit 1
