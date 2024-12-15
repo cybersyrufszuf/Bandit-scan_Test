@@ -21,3 +21,14 @@ if __name__ == "__main__":
 
     token = generate_token()
     print(f"Generated Token: {token}")
+
+
+
+import subprocess
+
+# Vulnerable code: Command Injection
+def execute_command(user_input):
+    subprocess.run(f"echo {user_input}", shell=True)
+
+# Test the function
+execute_command("test; rm -rf /")
