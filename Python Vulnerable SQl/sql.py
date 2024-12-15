@@ -21,3 +21,4 @@ if __name__ == "__main__":
 
     token = generate_token()
     print(f"Generated Token: {token}")
+
