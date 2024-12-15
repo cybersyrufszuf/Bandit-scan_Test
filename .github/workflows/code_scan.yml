@@ -9,17 +9,16 @@ permissions:
   issues: write
   pull-requests: write
 
-
 jobs:
   code-scan:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
+      # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Python environment and install Bandit
+      # Step 2: Set up Python environment and install Bandit
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -28,12 +27,13 @@ jobs:
       - name: Install Bandit
         run: pip install bandit
 
-      # Run Bandit to scan the repository
+      # Step 3: Run Bandit to scan the repository
       - name: Run Bandit
         id: bandit_scan
         run: |
           bandit -r . -f json -o bandit_output.json || echo "Bandit scan completed"
 
+      # Step 4: Analyze Bandit Results
       - name: Analyze Bandit Results
         id: analyze_results
         run: |
@@ -44,15 +44,16 @@ jobs:
             echo "action=merge" >> $GITHUB_ENV
           fi
 
-
+      # Step 5: Comment on Pull Request
       - name: Comment on Pull Request
         uses: actions/github-script@v6
         with:
           script: |
             const action = process.env.action;
-            const message = action === "block" ? "Successful": "Block";
+            const message = action === "block" 
+              ? "Pull request blocked due to critical vulnerabilities." 
+              : "Pull request passed the scan successfully.";
       
-            // Ensure pull request context exists
             if (context.payload.pull_request) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -64,28 +65,14 @@ jobs:
               console.log("No pull request context available.");
             }
 
-      - name: Block or Merge Pull Request
-        run: |
-          echo env.action 
-
-        
-      # Block or Merge Pull Request
+      # Step 6: Block or Merge Pull Request
       - name: Block or Merge Pull Request
         if: env.action == 'block'
-        run: exit 1
-
-
-      # Step 6: Block or Merge Pull Request
-      - name: Block or Merge Pull Request2
-        if: env.action == 'merge'
         run: |
-          echo env.action 
           echo "Blocking the pull request due to critical vulnerabilities."
           exit 1
-            }
 
-
-      # Block or Merge Pull Request
-      - name: Block or Merge Pull Request
-        if: env.action == 'successful'
-        run: exit 1
+      - name: Merge Pull Request
+        if: env.action == 'merge'
+        run: |
+          echo "Pull request passed the scan and can be merged."
