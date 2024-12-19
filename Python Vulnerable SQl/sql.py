@@ -1,5 +1,5 @@
-#import hashlib
-#import os
+import hashlib
+import os
 
 # Vulnerable: Using MD5, a weak cryptographic hashing algorithm
 def hash_password(password):
