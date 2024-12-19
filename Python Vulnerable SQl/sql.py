@@ -1,5 +1,5 @@
-import hashlib
-import os
+#import hashlib
+#import os
 
 # Vulnerable: Using MD5, a weak cryptographic hashing algorithm
 def hash_password(password):
@@ -21,3 +21,5 @@ if __name__ == "__main__":
 
     token = generate_token()
     print(f"Generated Token: {token}")
+
+
