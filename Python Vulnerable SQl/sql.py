@@ -1,27 +1,17 @@
-import requests
-from urllib.parse import urlparse
+# Vulnerable Python code using raw SQL queries
+import sqlite3
 
-# Secure function
-def fetch_data(url):
-    # Parse the URL to validate it
-    parsed_url = urlparse(url)
+def get_user_data(username):
+    connection = sqlite3.connect("example.db")
+    cursor = connection.cursor()
     
-    # Define an allowlist of domains
-    allowed_domains = ["example.com", "api.example.com"]
+    # UNSAFE: Directly embedding user input into the SQL query
+    query = f"SELECT * FROM users WHERE username = '{username}'"
+    cursor.execute(query)
     
-    # Ensure the URL's hostname is in the allowlist
-    if parsed_url.hostname not in allowed_domains:
-        raise ValueError("Invalid URL: Access to this domain is not allowed")
-    
-    # Fetch data from the validated URL
-    response = requests.get(url)
-    return response.text
-
-# Example usage
-try:
-    user_input = "http://api.example.com/data"  # Valid input
-    print(fetch_data(user_input))
-    
+    result = cursor.fetchall()
+    connection.close()
+    return result
     # Malicious input would now raise an error
     malicious_input = "http://169.254.169.254/latest/meta-data/"
     print(fetch_data(malicious_input))  # Will raise ValueError
