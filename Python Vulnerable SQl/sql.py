@@ -1,31 +1,31 @@
-import requests
-from urllib.parse import urlparse
+import sqlite3
 
-# Secure function
-def fetch_data(url):
-    # Parse the URL to validate it
-    parsed_url = urlparse(url)
-    
-    # Define an allowlist of domains
-    allowed_domains = ["example.com", "api.example.com"]
-    
-    # Ensure the URL's hostname is in the allowlist
-    if parsed_url.hostname not in allowed_domains:
-        raise ValueError("Invalid URL: Access to this domain is not allowed")
-    
-    # Fetch data from the validated URL
-    response = requests.get(url)
-    return response.text
+# Establishing connection to a test database
+connection = sqlite3.connect("test.db")
+cursor = connection.cursor()
 
-# Example usage
-try:
-    user_input = "http://api.example.com/data"  # Valid input
-    print(fetch_data(user_input))
-    
-    # Malicious input would now raise an error
-    malicious_input = "http://169.254.169.254/latest/meta-data/"
-    print(fetch_data(malicious_input))  # Will raise ValueError
-except ValueError as e:
-    print(f"Error: {e}")
+# Creating a sample users table
+cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)")
+cursor.execute("INSERT INTO users (username, password) VALUES ('admin', 'admin123')")
+connection.commit()
 
+# Vulnerable function
+def authenticate_user(username, password):
+    # This query is vulnerable to SQL injection
+    query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+    print(f"Executing query: {query}")  # Debugging purpose only
+    cursor.execute(query)
+    return cursor.fetchone()
 
+# Example input that can exploit the vulnerability
+user_input_username = "admin' OR '1'='1"
+user_input_password = "does_not_matter"
+
+# Attempt to authenticate with malicious input
+user = authenticate_user(user_input_username, user_input_password)
+if user:
+    print("Login successful:", user)
+else:
+    print("Login failed")
+
+connection.close()
