@@ -4,11 +4,12 @@ on:
   pull_request:
     branches:
       - main
-
 permissions:
   contents: read
   pull-requests: write  # Needed to add comments to the PR
-
+permissions:
+  contents: read
+  security-events: read
 jobs:
   code-scan:
     runs-on: ubuntu-latest
